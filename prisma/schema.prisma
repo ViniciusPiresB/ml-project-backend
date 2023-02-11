@@ -16,3 +16,20 @@ model Account {
   accessToken String
   updatedAt   DateTime @default(now())
 }
+
+model Order {
+  id            Int         @id
+  title         String
+  variation     Variation[]
+  quantity      Int
+  username      String
+  date_of_order DateTime
+}
+
+model Variation {
+  id      Int    @id @default(autoincrement())
+  name    String
+  value   String
+  Order   Order? @relation(fields: [orderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  orderId Int?
+}
