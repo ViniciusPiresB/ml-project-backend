@@ -2,17 +2,13 @@ import axios from "axios";
 import { allowedShippingStatus } from "../helper/allowedShippingStatus";
 import { getUsers } from "../helper/getUsers";
 import { ItemDto } from "../helper/types/item.type";
-import { OrderDto } from "../helper/types/order.type";
-import { OrdersOfUser } from "../helper/types/ordersOfUser.type";
 import { VariationDto } from "../helper/types/variation.type";
 
 export class orderService {
-  private async getDetailOfOrders(orders: any) {}
-
   public static async getOrders() {
     const users = await getUsers();
 
-    let ordersOfUsers: OrdersOfUser[] = [];
+    let ordersOfUsers: ItemDto[] = [];
 
     const usersPromises = users.map(async user => {
       const headers = { authorization: `Bearer ${user.accessToken}` };
@@ -25,8 +21,6 @@ export class orderService {
       );
 
       const orders = orderResponse.data.results;
-
-      let notReadyOrders: ItemDto[] = [];
       // @ts-ignore
       const shipmentPromises = orders.map(async order => {
         const shipmentId = order.shipping.id;
@@ -37,6 +31,7 @@ export class orderService {
         );
 
         const shipmentStatus = shipmentResponse.data.substatus;
+        const shipmentData = shipmentResponse.data;
 
         if (allowedShippingStatus.includes(shipmentStatus)) {
           const items = order.order_items;
@@ -50,24 +45,20 @@ export class orderService {
             };
 
             const itemOfOrder: ItemDto = {
+              id: order.id,
               title: item.item.title,
               variation: itemVariation,
-              quantity: item.quantity
+              quantity: item.quantity,
+              username: user.name,
+              date_of_order: shipmentData.status_history.date_handling
             };
 
-            notReadyOrders.push(itemOfOrder);
+            ordersOfUsers.push(itemOfOrder);
           });
         }
       });
 
       await Promise.all(shipmentPromises);
-
-      const ordersOfUser: OrdersOfUser = {
-        username: user.name,
-        notReadyOrders
-      };
-
-      ordersOfUsers.push(ordersOfUser);
     });
 
     await Promise.all(usersPromises);
