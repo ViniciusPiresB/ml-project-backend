@@ -26,6 +26,8 @@ export class mercadoLivreService {
       const shipmentPromises = orders.map(async order => {
         const shipmentId = order.shipping.id;
 
+        if (!shipmentId) return;
+
         const shipmentResponse = await axios.get(
           `https://api.mercadolibre.com/shipments/${shipmentId}`,
           { headers }
