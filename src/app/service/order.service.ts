@@ -1,6 +1,7 @@
 import { prisma } from "../../database/prismaClient";
 import { mercadoLivreService } from "./mercadoLivre.service";
-import {ItemDto} from "../helper/types/item.type"
+import { ItemDto } from "../helper/types/item.type"
+import { Order } from "@prisma/client";
 
 export class orderService {
   public static async getOrders() {
@@ -11,11 +12,13 @@ export class orderService {
 
     const orders = await this.findMany()
 
+    this.orderByDate(orders)
+
     return orders;
   }
 
   private static async findMany() {
-    return prisma.order.findMany()
+    return prisma.order.findMany();
   }
 
   private static async insertOrdersInDatabase(orders: ItemDto[]) {
@@ -48,10 +51,14 @@ export class orderService {
     const idsFromMercadoLivre = ordersFromMercadoLivre.map(order => { return order.id });
     const idsFromDatabase = ordersInDatabase.map(order => { return order.id});
 
-    const idOfItemsToBeDeleted = idsFromDatabase.filter(id => !idsFromMercadoLivre.includes(id));
+    const idOfItemsToBeDeleted = idsFromDatabase.filter(id => !idsFromMercadoLivre.includes(Number(id)));
 
     const promises = idOfItemsToBeDeleted.map(async id => await prisma.order.delete({where: { id }}));
 
     await Promise.all(promises);
+  }
+
+  private static orderByDate(orders: Order[]) {
+    orders.sort((a, b) => b.date_of_order.getTime() - a.date_of_order.getTime());
   }
 }

@@ -13,7 +13,7 @@ export class mercadoLivreService {
 
     const usersPromises = users.map(async user => {
       const headers = { authorization: `Bearer ${user.accessToken}` };
-      console.log(user);
+
       const orderResponse = await axios.get(
         `https://api.mercadolibre.com/orders/search?seller=${user.id}&tags=not_delivered&order.status=paid&sort=date_desc`,
         {
@@ -75,12 +75,6 @@ export class mercadoLivreService {
 
     await Promise.all(usersPromises);
 
-    this.orderByDate(ordersOfUsers);
-
     return ordersOfUsers;
-  }
-
-  private static orderByDate(items: ItemDto[]) {
-    items.sort((a, b) => b.date_of_order.getTime() - a.date_of_order.getTime());
   }
 }
