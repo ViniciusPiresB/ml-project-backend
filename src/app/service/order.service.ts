@@ -7,12 +7,12 @@ export class orderService {
   public static async getOrders() {
     const ordersFromMercadoLivre = await mercadoLivreService.getOrders();
 
-    await this.insertOrdersInDatabase(ordersFromMercadoLivre)
-    await this.deleteDeliveredOrders(ordersFromMercadoLivre)
+    await this.insertOrdersInDatabase(ordersFromMercadoLivre);
+    await this.deleteDeliveredOrders(ordersFromMercadoLivre);
 
-    const orders = await this.findMany()
+    const orders = await this.findMany();
 
-    this.orderByDate(orders)
+    this.orderByDate(orders);
 
     return orders;
   }
