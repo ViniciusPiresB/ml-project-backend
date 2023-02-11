@@ -1,86 +1,37 @@
-import axios from "axios";
-import { allowedShippingStatus } from "../helper/allowedShippingStatus";
-import { getUsers } from "../helper/getUsers";
-import { getUTCTime } from "../helper/getUTCTime";
-import { ItemDto } from "../helper/types/item.type";
-import { VariationDto } from "../helper/types/variation.type";
+import { prisma } from "../../database/prismaClient";
+import { mercadoLivreService } from "./mercadoLivre.service";
+import {ItemDto} from "../helper/types/item.type"
 
 export class orderService {
   public static async getOrders() {
-    const users = await getUsers();
+    const orders = await mercadoLivreService.getOrders();
 
-    let ordersOfUsers: ItemDto[] = [];
+    await this.insertOrdersInDatabase(orders)
 
-    const usersPromises = users.map(async user => {
-      const headers = { authorization: `Bearer ${user.accessToken}` };
-      console.log(user);
-      const orderResponse = await axios.get(
-        `https://api.mercadolibre.com/orders/search?seller=${user.id}&tags=not_delivered&order.status=paid&sort=date_desc`,
-        {
-          headers
-        }
-      );
-
-      const orders = orderResponse.data.results;
-      // @ts-ignore
-      const shipmentPromises = orders.map(async order => {
-        const shipmentId = order.shipping.id;
-
-        const shipmentResponse = await axios.get(
-          `https://api.mercadolibre.com/shipments/${shipmentId}`,
-          { headers }
-        );
-
-        const shipmentStatus = shipmentResponse.data.substatus;
-        const shipmentData = shipmentResponse.data;
-
-        if (allowedShippingStatus.includes(shipmentStatus)) {
-          const items = order.order_items;
-          //@ts-ignore
-          items.forEach(item => {
-            const itemVariations = item.item.variation_attributes;
-
-            let variations: VariationDto[] = [];
-
-            //@ts-ignore
-            itemVariations.forEach(variation => {
-              const itemVariation: VariationDto = {
-                name: variation.name,
-                value: variation.value_name
-              };
-
-              variations.push(itemVariation);
-            });
-
-            const date_of_order = getUTCTime(
-              shipmentData.status_history.date_handling
-            );
-
-            const itemOfOrder: ItemDto = {
-              id: order.id,
-              title: item.item.title,
-              variation: variations,
-              quantity: item.quantity,
-              username: user.name,
-              date_of_order
-            };
-
-            ordersOfUsers.push(itemOfOrder);
-          });
-        }
-      });
-
-      await Promise.all(shipmentPromises);
-    });
-
-    await Promise.all(usersPromises);
-
-    this.orderByDate(ordersOfUsers);
-
-    return ordersOfUsers;
+    return orders;
   }
 
-  private static orderByDate(items: ItemDto[]) {
-    items.sort((a, b) => b.date_of_order.getTime() - a.date_of_order.getTime());
+  private static async insertOrdersInDatabase(orders: ItemDto[]) {
+    orders.forEach(async order => {
+      const { id, title, quantity, username, date_of_order } = order;
+
+      const isOrder = await prisma.order.findFirst({where: {id: id}})
+
+      if(isOrder) return;
+
+      const createdOrder = await prisma.order.create({
+        data: { id, title, quantity, username, date_of_order }
+      });
+
+      const orderId = createdOrder.id;
+
+      const promises = order.variation?.map(async variation => {
+        const { name, value } = variation;
+        await prisma.variation.create({ data: { name, value, orderId } });
+      });
+
+      if(promises)
+        await Promise.all(promises);
+    });
   }
 }

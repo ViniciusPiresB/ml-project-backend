@@ -1,0 +1,86 @@
+import axios from "axios";
+import { allowedShippingStatus } from "../helper/allowedShippingStatus";
+import { getUsers } from "../helper/getUsers";
+import { getUTCTime } from "../helper/getUTCTime";
+import { ItemDto } from "../helper/types/item.type";
+import { VariationDto } from "../helper/types/variation.type";
+
+export class mercadoLivreService {
+  public static async getOrders() {
+    const users = await getUsers();
+
+    let ordersOfUsers: ItemDto[] = [];
+
+    const usersPromises = users.map(async user => {
+      const headers = { authorization: `Bearer ${user.accessToken}` };
+      console.log(user);
+      const orderResponse = await axios.get(
+        `https://api.mercadolibre.com/orders/search?seller=${user.id}&tags=not_delivered&order.status=paid&sort=date_desc`,
+        {
+          headers
+        }
+      );
+
+      const orders = orderResponse.data.results;
+      // @ts-ignore
+      const shipmentPromises = orders.map(async order => {
+        const shipmentId = order.shipping.id;
+
+        const shipmentResponse = await axios.get(
+          `https://api.mercadolibre.com/shipments/${shipmentId}`,
+          { headers }
+        );
+
+        const shipmentStatus = shipmentResponse.data.substatus;
+        const shipmentData = shipmentResponse.data;
+
+        if (allowedShippingStatus.includes(shipmentStatus)) {
+          const items = order.order_items;
+          //@ts-ignore
+          items.forEach(item => {
+            const itemVariations = item.item.variation_attributes;
+
+            let variations: VariationDto[] = [];
+
+            //@ts-ignore
+            itemVariations.forEach(variation => {
+              const itemVariation: VariationDto = {
+                name: variation.name,
+                value: variation.value_name
+              };
+
+              variations.push(itemVariation);
+            });
+
+            const date_of_order = getUTCTime(
+              shipmentData.status_history.date_handling
+            );
+
+            const itemOfOrder: ItemDto = {
+              id: order.id,
+              title: item.item.title,
+              variation: variations,
+              quantity: item.quantity,
+              username: user.name,
+              date_of_order
+            };
+
+            ordersOfUsers.push(itemOfOrder);
+          });
+        }
+      });
+
+      await Promise.all(shipmentPromises);
+    });
+
+    await Promise.all(usersPromises);
+
+    this.orderByDate(ordersOfUsers);
+
+    return ordersOfUsers;
+  }
+
+  private static orderByDate(items: ItemDto[]) {
+    items.sort((a, b) => b.date_of_order.getTime() - a.date_of_order.getTime());
+  }
+}
