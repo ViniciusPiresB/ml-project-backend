@@ -7,18 +7,47 @@ export class orderService {
   public static async getOrders() {
     const ordersFromMercadoLivre = await mercadoLivreService.getOrders();
 
-    await this.insertOrdersInDatabase(ordersFromMercadoLivre);
-    await this.deleteDeliveredOrders(ordersFromMercadoLivre);
+    await this.insertOrdersInDatabase(ordersFromMercadoLivre)
+    await this.deleteDeliveredOrders(ordersFromMercadoLivre)
 
     const orders = await this.findMany();
+    const ordersWithVariation = await this.insertVariationInOrders(orders);
 
-    this.orderByDate(orders);
+    this.orderByDate(ordersWithVariation);
 
-    return orders;
+    return ordersWithVariation;
   }
 
   private static async findMany() {
     return prisma.order.findMany();
+  }
+
+  private static async insertVariationInOrders(orders: Order[]) {
+    let ordersWithVariation: Order[] = [];
+
+    const promises = orders.map(async order => {
+      const orderWithVariation = await prisma.order.findUnique({
+        where: { id: order.id },
+        include: {
+          variation: {
+            where: {
+              orderId: order.id
+            },
+            select: {
+              name: true,
+              value: true
+            }
+          }
+        }
+      });
+
+      if(orderWithVariation) 
+        ordersWithVariation.push(orderWithVariation)
+    })
+
+    await Promise.all(promises)
+
+    return ordersWithVariation;
   }
 
   private static async insertOrdersInDatabase(orders: ItemDto[]) {
