@@ -18,7 +18,7 @@ model Account {
 }
 
 model Order {
-  id            Int         @id
+  id            BigInt      @id
   title         String
   variation     Variation[]
   quantity      Int
@@ -30,6 +30,6 @@ model Variation {
   id      Int    @id @default(autoincrement())
   name    String
   value   String
-  Order   Order? @relation(fields: [orderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  orderId Int?
+  Order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  orderId BigInt
 }
