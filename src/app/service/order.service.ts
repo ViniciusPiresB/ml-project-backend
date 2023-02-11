@@ -1,6 +1,7 @@
 import axios from "axios";
 import { allowedShippingStatus } from "../helper/allowedShippingStatus";
 import { getUsers } from "../helper/getUsers";
+import { getUTCTime } from "../helper/getUTCTime";
 import { ItemDto } from "../helper/types/item.type";
 import { VariationDto } from "../helper/types/variation.type";
 
@@ -39,18 +40,29 @@ export class orderService {
           items.forEach(item => {
             const itemVariations = item.item.variation_attributes;
 
-            const itemVariation: VariationDto = {
-              name: itemVariations[0].name,
-              value: itemVariations[0].value_name
-            };
+            let variations: VariationDto[] = [];
+
+            //@ts-ignore
+            itemVariations.forEach(variation => {
+              const itemVariation: VariationDto = {
+                name: variation.name,
+                value: variation.value_name
+              };
+
+              variations.push(itemVariation);
+            });
+
+            const date_of_order = getUTCTime(
+              shipmentData.status_history.date_handling
+            );
 
             const itemOfOrder: ItemDto = {
               id: order.id,
               title: item.item.title,
-              variation: itemVariation,
+              variation: variations,
               quantity: item.quantity,
               username: user.name,
-              date_of_order: shipmentData.status_history.date_handling
+              date_of_order
             };
 
             ordersOfUsers.push(itemOfOrder);
@@ -63,6 +75,12 @@ export class orderService {
 
     await Promise.all(usersPromises);
 
+    this.orderByDate(ordersOfUsers);
+
     return ordersOfUsers;
+  }
+
+  private static orderByDate(items: ItemDto[]) {
+    items.sort((a, b) => b.date_of_order.getTime() - a.date_of_order.getTime());
   }
 }
