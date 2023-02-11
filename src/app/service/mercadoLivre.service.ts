@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { allowedShippingStatus } from "../helper/allowedShippingStatus";
 import { getUsers } from "../helper/getUsers";
 import { getUTCTime } from "../helper/getUTCTime";
@@ -17,9 +17,22 @@ export class mercadoLivreService {
       const orderResponse = await axios.get(
         `https://api.mercadolibre.com/orders/search?seller=${user.id}&tags=not_delivered&order.status=paid&sort=date_desc`,
         {
-          headers
+          headers,
+          validateStatus: () => true
         }
       );
+
+      if (orderResponse.status == 401)
+        throw new AxiosError(
+          `Usuário ${user.name} com login inválido ou expirado.`,
+          orderResponse.statusText
+        );
+
+      if (orderResponse.status != 200)
+        throw new AxiosError(
+          "Something wrong with ML service",
+          orderResponse.statusText
+        );
 
       const orders = orderResponse.data.results;
       // @ts-ignore
