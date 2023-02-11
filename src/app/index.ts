@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
-import { defaultRouter } from "./route/default.route";
 import { orderRouter } from "./route/order.route";
 
 class App {
@@ -21,7 +20,6 @@ class App {
   }
 
   route() {
-    this.app.use("/", defaultRouter);
     this.app.use("/order", orderRouter);
   }
 }
