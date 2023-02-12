@@ -12,11 +12,16 @@ export class OrderController {
 
       res.status(200).send(ordersToJson);
     } catch (error) {
-      if (error instanceof AxiosError)
+      if (error instanceof AxiosError) {
         res.status(401).send({
           reason: error.code,
           message: error.message
         });
+
+        return;
+      }
+
+      throw error;
     }
   }
 }
