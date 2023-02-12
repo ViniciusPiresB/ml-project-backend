@@ -33,3 +33,8 @@ model Variation {
   Order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   orderId BigInt
 }
+
+model TableSync {
+  name   String  @id
+  isSync Boolean
+}
