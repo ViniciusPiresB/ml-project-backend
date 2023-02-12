@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
 import { orderRouter } from "./route/order.route";
+import { tableSyncRouter } from "./route/tableSync.route";
 
 class App {
   public app: express.Application;
@@ -21,6 +22,7 @@ class App {
 
   route() {
     this.app.use("/order", orderRouter);
+    this.app.use("/getSync", tableSyncRouter);
   }
 }
 
