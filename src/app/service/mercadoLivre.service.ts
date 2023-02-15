@@ -1,13 +1,42 @@
+import { Account } from "@prisma/client";
 import axios, { AxiosError } from "axios";
+import * as dotenv from "dotenv";
+import { prisma } from "../../database/prismaClient";
 import { allowedShippingStatus } from "../helper/allowedShippingStatus";
 import { getUsers } from "../helper/getUsers";
 import { getUTCTime } from "../helper/getUTCTime";
 import { ItemDto } from "../helper/types/item.type";
 import { VariationDto } from "../helper/types/variation.type";
+dotenv.config();
 
 export class mercadoLivreService {
   public static async getOrders() {
-    const users = await getUsers();
+    let users: Account[];
+    let isTokenReloaded: boolean = false;
+
+    users = await getUsers();
+
+    const checkUsersTokenPromises = users.map(async user => {
+      const headers = { authorization: `Bearer ${user.accessToken}` };
+
+      const checkTokenResponse = await axios.get(
+        `https://api.mercadolibre.com/users/${user.id}`,
+        {
+          headers,
+          validateStatus: () => true
+        }
+      );
+
+      if (checkTokenResponse.status == 401) {
+        await this.renewToken(user);
+        isTokenReloaded = true;
+      }
+    });
+
+    await Promise.all(checkUsersTokenPromises);
+    if (isTokenReloaded) {
+      users = await getUsers();
+    }
 
     let ordersOfUsers: ItemDto[] = [];
 
@@ -22,15 +51,16 @@ export class mercadoLivreService {
         }
       );
 
-      if (orderResponse.status == 401)
+      if (orderResponse.status == 401) {
         throw new AxiosError(
-          `Usuário ${user.name} com login inválido ou expirado.`,
+          `Usuário ${user.name} com problemas, recarregue a pagina, caso não funcionar, contate um administrador do sistema.`,
           orderResponse.statusText
         );
+      }
 
       if (orderResponse.status != 200)
         throw new AxiosError(
-          "Something wrong with ML service",
+          "Algo errado com serviço ML, recarregue a pagina, caso não funcionar, contate um administrador do sistema",
           orderResponse.statusText
         );
 
@@ -91,5 +121,26 @@ export class mercadoLivreService {
     await Promise.all(usersPromises);
 
     return ordersOfUsers;
+  }
+
+  public static async renewToken(user: Account) {
+    const { CLIENT_ID, CLIENT_SECRET } = process.env;
+
+    const response = await axios.post(
+      "https://api.mercadolibre.com/oauth/token",
+      {
+        grant_type: "refresh_token",
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
+        refresh_token: user.refreshToken
+      }
+    );
+
+    const { access_token, refresh_token } = response.data;
+
+    await prisma.account.update({
+      where: { id: user.id },
+      data: { accessToken: access_token, refreshToken: refresh_token }
+    });
   }
 }
