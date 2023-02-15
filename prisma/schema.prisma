@@ -11,10 +11,11 @@ datasource db {
 }
 
 model Account {
-  id          Int      @id
-  name        String
-  accessToken String
-  updatedAt   DateTime @default(now())
+  id           Int      @id
+  name         String
+  accessToken  String
+  refreshToken String
+  updatedAt    DateTime @default(now())
 }
 
 model Order {
