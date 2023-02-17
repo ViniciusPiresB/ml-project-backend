@@ -1,0 +1,42 @@
+-- CreateTable
+CREATE TABLE "Account" (
+    "id" INTEGER NOT NULL,
+    "name" TEXT NOT NULL,
+    "accessToken" TEXT NOT NULL,
+    "refreshToken" TEXT NOT NULL,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Account_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Order" (
+    "id" BIGINT NOT NULL,
+    "title" TEXT NOT NULL,
+    "quantity" INTEGER NOT NULL,
+    "username" TEXT NOT NULL,
+    "date_of_order" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Order_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Variation" (
+    "id" SERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+    "value" TEXT NOT NULL,
+    "orderId" BIGINT NOT NULL,
+
+    CONSTRAINT "Variation_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "TableSync" (
+    "name" TEXT NOT NULL,
+    "isSync" BOOLEAN NOT NULL,
+
+    CONSTRAINT "TableSync_pkey" PRIMARY KEY ("name")
+);
+
+-- AddForeignKey
+ALTER TABLE "Variation" ADD CONSTRAINT "Variation_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "Order"("id") ON DELETE CASCADE ON UPDATE CASCADE;
