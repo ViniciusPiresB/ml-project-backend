@@ -26,6 +26,8 @@ model Order {
   quantity      Int
   username      String
   date_of_order DateTime
+  status        String
+  done          Boolean
 }
 
 model Variation {
