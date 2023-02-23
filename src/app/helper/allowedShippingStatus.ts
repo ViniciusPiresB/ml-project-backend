@@ -3,5 +3,6 @@ export const allowedShippingStatus = [
   "invoice_pending",
   "waiting_for_carrier_authorization",
   "ready_to_print",
+  "printed",
   "manufacturing"
 ];
