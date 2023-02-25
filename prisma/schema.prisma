@@ -20,12 +20,13 @@ model Account {
 }
 
 model Order {
-  id            BigInt      @id
-  title         String
-  variation     Variation[]
-  quantity      Int
-  username      String
-  date_of_order DateTime
+  id                        BigInt      @id
+  title                     String
+  variation                 Variation[]
+  quantity                  Int
+  manufacturing_ending_date DateTime?
+  username                  String
+  date_of_order             DateTime
 }
 
 model Variation {
