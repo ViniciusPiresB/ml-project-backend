@@ -85,6 +85,15 @@ export class mercadoLivreService {
           items.forEach(item => {
             const itemVariations = item.item.variation_attributes;
 
+            const manufacturing_ending_date = order.manufacturing_ending_date;
+            let manufacturing_ending_date_utc = undefined;
+
+            if (manufacturing_ending_date) {
+              manufacturing_ending_date_utc = getUTCTime(
+                manufacturing_ending_date
+              );
+            }
+
             let variations: VariationDto[] = [];
 
             //@ts-ignore
@@ -107,7 +116,8 @@ export class mercadoLivreService {
               variation: variations,
               quantity: item.quantity,
               username: user.name,
-              date_of_order
+              date_of_order,
+              manufacturing_ending_date: manufacturing_ending_date_utc
             };
 
             ordersOfUsers.push(itemOfOrder);
@@ -120,6 +130,7 @@ export class mercadoLivreService {
 
     await Promise.all(usersPromises);
 
+    console.log(ordersOfUsers);
     return ordersOfUsers;
   }
 

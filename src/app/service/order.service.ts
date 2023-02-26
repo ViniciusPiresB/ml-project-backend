@@ -52,14 +52,14 @@ export class orderService {
 
   private static async insertOrdersInDatabase(orders: ItemDto[]) {
     orders.forEach(async order => {
-      const { id, title, quantity, username, date_of_order } = order;
+      const { id, title, quantity, username, date_of_order, manufacturing_ending_date } = order;
 
       const isOrder = await prisma.order.findFirst({where: {id: id}})
 
       if(isOrder) return;
 
       const createdOrder = await prisma.order.create({
-        data: { id, title, quantity, username, date_of_order }
+        data: { id, title, quantity, username, date_of_order, manufacturing_ending_date }
       });
 
       const orderId = createdOrder.id;
