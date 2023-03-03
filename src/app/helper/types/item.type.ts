@@ -7,5 +7,6 @@ export type ItemDto = {
   quantity: number;
   username: string;
   date_of_order: Date;
+  value: number;
   manufacturing_ending_date?: Date;
 };

@@ -117,7 +117,8 @@ export class mercadoLivreService {
               quantity: item.quantity,
               username: user.name,
               date_of_order,
-              manufacturing_ending_date: manufacturing_ending_date_utc
+              manufacturing_ending_date: manufacturing_ending_date_utc,
+              value: order.total_amount
             };
 
             ordersOfUsers.push(itemOfOrder);
