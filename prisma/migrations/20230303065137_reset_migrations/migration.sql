@@ -14,8 +14,10 @@ CREATE TABLE "Order" (
     "id" BIGINT NOT NULL,
     "title" TEXT NOT NULL,
     "quantity" INTEGER NOT NULL,
+    "manufacturing_ending_date" TIMESTAMP(3),
     "username" TEXT NOT NULL,
     "date_of_order" TIMESTAMP(3) NOT NULL,
+    "value" DOUBLE PRECISION NOT NULL,
 
     CONSTRAINT "Order_pkey" PRIMARY KEY ("id")
 );
