@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE "Account" IF NOT EXISTS (
+CREATE TABLE "Account" (
     "id" INTEGER NOT NULL,
     "name" TEXT NOT NULL,
     "accessToken" TEXT NOT NULL,
@@ -10,7 +10,7 @@ CREATE TABLE "Account" IF NOT EXISTS (
 );
 
 -- CreateTable
-CREATE TABLE "Order" IF NOT EXISTS (
+CREATE TABLE "Order" (
     "id" BIGINT NOT NULL,
     "title" TEXT NOT NULL,
     "quantity" INTEGER NOT NULL,
@@ -23,7 +23,7 @@ CREATE TABLE "Order" IF NOT EXISTS (
 );
 
 -- CreateTable
-CREATE TABLE "Variation" IF NOT EXISTS (
+CREATE TABLE "Variation" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "value" TEXT NOT NULL,
@@ -33,7 +33,7 @@ CREATE TABLE "Variation" IF NOT EXISTS (
 );
 
 -- CreateTable
-CREATE TABLE "TableSync" IF NOT EXISTS (
+CREATE TABLE "TableSync" (
     "name" TEXT NOT NULL,
     "isSync" BOOLEAN NOT NULL,
 
