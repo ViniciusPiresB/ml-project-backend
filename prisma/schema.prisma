@@ -27,6 +27,7 @@ model Order {
   manufacturing_ending_date DateTime?
   username                  String
   date_of_order             DateTime
+  value                     Float
 }
 
 model Variation {
